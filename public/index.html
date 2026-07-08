@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8">
+<title>مدیریت واردات چین</title>
+<script src="/js/api.js"></script>
+<script>
+(async () => {
+  try {
+    await api.get('/api/auth/me');
+    window.location.href = '/dashboard.html';
+  } catch (e) {
+    window.location.href = '/login.html';
+  }
+})();
+</script>
+</head>
+<body></body>
+</html>

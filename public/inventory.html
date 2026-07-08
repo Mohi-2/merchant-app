@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ثبت خروج انبار – مدیریت واردات چین</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/app.css">
+</head>
+<body>
+<div id="app-header"></div>
+<main>
+  <div class="card">
+    <h2>ثبت خروج از انبار</h2>
+    <form id="movementForm">
+      <div class="form-grid">
+        <div class="field">
+          <label>محصول *</label>
+          <select id="productId" required></select>
+        </div>
+        <div class="field">
+          <label>تعداد *</label>
+          <input type="number" id="quantity" min="1" step="1" required>
+          <span class="hint" id="stockHint"></span>
+        </div>
+        <div class="field">
+          <label>دلیل خروج *</label>
+          <select id="reason" required>
+            <option value="SALE">فروش</option>
+            <option value="USAGE">مصرف</option>
+            <option value="ADJUSTMENT">اصلاح موجودی</option>
+            <option value="DAMAGE">ضایعات</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>تاریخ *</label>
+          <input type="date" id="date" required>
+        </div>
+        <div class="field">
+          <label>یادداشت</label>
+          <input type="text" id="note">
+        </div>
+      </div>
+      <div style="margin-top:14px;">
+        <button type="submit" class="btn primary" id="submitBtn">ثبت خروج</button>
+      </div>
+    </form>
+  </div>
+  <div class="card">
+    <h2>آخرین جابجایی‌های موجودی</h2>
+    <div id="movementsWrap"><p class="empty">در حال بارگذاری…</p></div>
+  </div>
+</main>
+<div id="toast"></div>
+<script src="/js/api.js"></script>
+<script src="/js/header.js"></script>
+<script src="/js/inventory.js"></script>
+</body>
+</html>

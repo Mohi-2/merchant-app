@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>محصولات – مدیریت واردات چین</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/app.css">
+</head>
+<body>
+<div id="app-header"></div>
+<main>
+  <div class="card">
+    <h2 id="formTitle">محصول جدید</h2>
+    <form id="productForm">
+      <input type="hidden" id="productId">
+      <div class="form-grid">
+        <div class="field">
+          <label>نام محصول *</label>
+          <input type="text" id="name" required>
+        </div>
+        <div class="field">
+          <label>دسته‌بندی</label>
+          <select id="categoryId"><option value="">بدون دسته‌بندی</option></select>
+        </div>
+        <div class="field">
+          <label>واحد شمارش *</label>
+          <input type="text" id="unitLabel" placeholder="مثلاً کارتن ۲۰ تایی" required>
+        </div>
+        <div class="field">
+          <label>لینک محصول (Alibaba)</label>
+          <input type="url" id="alibabaLink" placeholder="https://www.alibaba.com/...">
+        </div>
+        <div class="field">
+          <label>لینک تصویر</label>
+          <input type="url" id="imageUrl" placeholder="https://...">
+        </div>
+      </div>
+      <div style="margin-top:16px;display:flex;gap:10px;">
+        <button type="submit" class="btn primary" id="submitBtn">افزودن محصول</button>
+        <button type="button" class="btn" id="cancelEditBtn" style="display:none;">انصراف از ویرایش</button>
+      </div>
+    </form>
+  </div>
+  <div class="card">
+    <h2>لیست محصولات</h2>
+    <div id="productsWrap"><p class="empty">در حال بارگذاری…</p></div>
+  </div>
+</main>
+<div id="toast"></div>
+<script src="/js/api.js"></script>
+<script src="/js/header.js"></script>
+<script src="/js/products.js"></script>
+</body>
+</html>
