@@ -34,7 +34,15 @@ const captureItems = db.transaction((rawItems, pageType) => {
     };
     const existing = getByUrlStmt.get(url);
     if (existing) {
-      updateItemStmt.run({ ...fields, id: existing.id });
+      updateItemStmt.run({
+        ...fields,
+        ...(price ? {} : {
+          price_raw: existing.price_raw,
+          price_min_cny: existing.price_min_cny,
+          price_max_cny: existing.price_max_cny,
+        }),
+        id: existing.id,
+      });
       if (price) {
         const last = latestPriceStmt.get(existing.id);
         if (!last || last.price_min_cny !== price.min || last.price_max_cny !== price.max) {
@@ -79,7 +87,7 @@ const addProductFromItem = db.transaction((itemId, { name, category_id, unit_lab
   }
   const info = db.prepare(
     'INSERT INTO products (name, category_id, unit_label, alibaba_link, image_url) VALUES (?, ?, ?, ?, ?)'
-  ).run(name, category_id || null, unit_label, item.url, item.image_url);
+  ).run(name, category_id ?? null, unit_label, item.url, item.image_url);
   db.prepare("UPDATE crawled_items SET status = 'ADDED', product_id = ? WHERE id = ?").run(info.lastInsertRowid, itemId);
   return info.lastInsertRowid;
 });

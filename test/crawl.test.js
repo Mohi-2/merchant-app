@@ -73,6 +73,21 @@ test('setStatus toggles IGNORED/NEW and rejects unknown id', () => {
   assert.strictEqual(setStatus(999999, 'IGNORED'), false);
 });
 
+test('re-capture with unparseable price keeps last known price on item row', () => {
+  const url = 'https://www.alibaba.com/product-detail/Kettle_333.html';
+  captureItems([{ ...ITEM, url, title: 'Kettle', price_raw: '¥20-25' }], 'SEARCH');
+  const before = listItems('NEW').find(r => r.title === 'Kettle');
+  assert.strictEqual(before.price_min_cny, 20);
+  const pricesBefore = listPrices(before.id).length;
+
+  captureItems([{ ...ITEM, url, title: 'Kettle', price_raw: 'contact supplier' }], 'SEARCH');
+  const after = listItems('NEW').find(r => r.title === 'Kettle');
+  assert.strictEqual(after.price_raw, '¥20-25');
+  assert.strictEqual(after.price_min_cny, 20);
+  assert.strictEqual(after.price_max_cny, 25);
+  assert.strictEqual(listPrices(after.id).length, pricesBefore);
+});
+
 test('addProductFromItem throws 404 for missing item', () => {
   assert.throws(() => addProductFromItem(999999, { name: 'x', unit_label: 'y' }), e => e.status === 404);
 });
