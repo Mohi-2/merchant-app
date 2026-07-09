@@ -5,6 +5,7 @@ const NAV_LINKS = [
   { key: 'products', label: 'محصولات', href: '/products.html' },
   { key: 'categories', label: 'دسته‌بندی‌ها', href: '/categories.html' },
   { key: 'purchases', label: 'خریدها', href: '/purchases.html' },
+  { key: 'crawled', label: 'کرالر علی‌بابا', href: '/crawled.html' },
   { key: 'inventory', label: 'ثبت خروج انبار', href: '/inventory.html' },
 ];
 

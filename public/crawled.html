@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>کرالر علی‌بابا – مدیریت واردات چین</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/app.css">
+</head>
+<body>
+<div id="app-header"></div>
+<main>
+  <div class="card">
+    <h2>راه‌اندازی</h2>
+    <p style="font-size:13px;color:var(--muted);line-height:2;">
+      ۱) دکمه زیر را به نوار بوکمارک مرورگر بکش. ۲) در Alibaba.com کشور تحویل (Deliver to) را روی China بگذار تا قیمت‌ها یوان شوند.
+      ۳) روی صفحه نتایج جستجو یا صفحه محصول، بوکمارک را بزن — محصولات همینجا ظاهر می‌شوند.
+    </p>
+    <p style="margin-top:10px;">
+      <a id="bookmarkletLink" class="btn primary" style="text-decoration:none;display:inline-block;" href="#">📥 ذخیره در اپ واردات</a>
+      <span class="hint" style="font-size:11.5px;color:var(--faint);margin-right:10px;">این دکمه را بکش به بوکمارک‌بار (کلیک نکن)</span>
+    </p>
+  </div>
+  <div class="card">
+    <h2>محصولات کرال‌شده</h2>
+    <div id="tabs" style="display:flex;gap:6px;margin-bottom:14px;">
+      <button class="btn tab-btn" data-status="NEW">جدید</button>
+      <button class="btn tab-btn" data-status="ADDED">افزوده‌شده</button>
+      <button class="btn tab-btn" data-status="IGNORED">نادیده‌گرفته</button>
+    </div>
+    <div id="itemsWrap"><p class="empty">در حال بارگذاری…</p></div>
+  </div>
+</main>
+<div id="toast"></div>
+<script src="/js/api.js"></script>
+<script src="/js/header.js"></script>
+<script src="/js/crawled.js"></script>
+</body>
+</html>
