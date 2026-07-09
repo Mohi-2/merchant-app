@@ -32,6 +32,7 @@ app.use('/api/products', require('./routes/products'));
 app.use('/api/purchases', require('./routes/purchases'));
 app.use('/api/inventory', require('./routes/inventory'));
 app.use('/api/exchange-rate', require('./routes/exchangeRate'));
+app.use('/api/crawl', require('./routes/crawl'));
 
 initDefaultAdmin();
 
