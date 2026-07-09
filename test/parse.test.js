@@ -49,6 +49,17 @@ test('normalizeAlibabaUrl: invalid input returns null', () => {
   assert.strictEqual(normalizeAlibabaUrl(null), null);
 });
 
+test('normalizeAlibabaUrl: rejects non-alibaba hosts and lookalikes', () => {
+  assert.strictEqual(normalizeAlibabaUrl('https://evil.example/product-detail/x_1.html'), null);
+  assert.strictEqual(normalizeAlibabaUrl('https://alibaba.com.evil.com/product-detail/x_1.html'), null);
+  assert.strictEqual(normalizeAlibabaUrl('https://evil-alibaba.com/product-detail/x_1.html'), null);
+  // subdomains of alibaba.com are allowed
+  assert.strictEqual(
+    normalizeAlibabaUrl('https://german.alibaba.com/product-detail/x_1.html?a=b'),
+    'https://german.alibaba.com/product-detail/x_1.html'
+  );
+});
+
 test('extractAlibabaId: trailing _digits.html', () => {
   assert.strictEqual(extractAlibabaId('https://www.alibaba.com/product-detail/Pot_123456789.html'), '123456789');
   assert.strictEqual(extractAlibabaId('https://www.alibaba.com/showroom/pots.html'), null);

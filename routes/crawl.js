@@ -29,7 +29,11 @@ router.post('/capture', (req, res) => {
   if (!Array.isArray(items) || !items.length) {
     return res.status(400).json({ error: 'هیچ آیتمی ارسال نشده' });
   }
-  res.json({ ok: true, ...captureItems(items, page_type) });
+  try {
+    res.json({ ok: true, ...captureItems(items, page_type) });
+  } catch (e) {
+    res.status(500).json({ error: 'خطا در ذخیره آیتم‌ها' });
+  }
 });
 
 router.get('/bookmarklet', requireAuth, (req, res) => {

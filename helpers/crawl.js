@@ -18,19 +18,21 @@ const insertPriceStmt = db.prepare('INSERT INTO crawled_prices (crawled_item_id,
 
 const captureItems = db.transaction((rawItems, pageType) => {
   let created = 0, updated = 0;
+  const cap = (v, n) => (v == null ? null : String(v).slice(0, n) || null);
   for (const raw of rawItems) {
+    if (!raw || typeof raw !== 'object') continue;
     const url = normalizeAlibabaUrl(raw.url);
     const title = String(raw.title || '').trim().slice(0, 300);
     if (!url || !title) continue;
     const price = parsePriceRange(raw.price_raw);
     const fields = {
       title,
-      image_url: raw.image_url || null,
-      price_raw: raw.price_raw || null,
+      image_url: cap(raw.image_url, 1000),
+      price_raw: cap(raw.price_raw, 100),
       price_min_cny: price ? price.min : null,
       price_max_cny: price ? price.max : null,
-      moq: raw.moq || null,
-      seller_name: raw.seller_name || null,
+      moq: cap(raw.moq, 200),
+      seller_name: cap(raw.seller_name, 200),
     };
     const existing = getByUrlStmt.get(url);
     if (existing) {

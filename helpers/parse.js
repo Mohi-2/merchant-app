@@ -12,11 +12,14 @@ function parsePriceRange(raw) {
   return { min: Math.min(a, b), max: Math.max(a, b) };
 }
 
-// origin+pathname only (query/hash stripped); relative hrefs resolve against alibaba.com
+// origin+pathname only (query/hash stripped); relative hrefs resolve against alibaba.com.
+// Rejects (returns null) any URL whose host is not alibaba.com or a subdomain, so a
+// stray /product-detail/ anchor to a third-party host can't be stored or rendered.
 function normalizeAlibabaUrl(href) {
   if (!href) return null;
   let u;
   try { u = new URL(href, 'https://www.alibaba.com'); } catch { return null; }
+  if (!/(^|\.)alibaba\.com$/i.test(u.hostname)) return null;
   return u.origin + u.pathname;
 }
 

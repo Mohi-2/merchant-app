@@ -91,3 +91,28 @@ test('re-capture with unparseable price keeps last known price on item row', () 
 test('addProductFromItem throws 404 for missing item', () => {
   assert.throws(() => addProductFromItem(999999, { name: 'x', unit_label: 'y' }), e => e.status === 404);
 });
+
+// Kept last: inserts an extra NEW item, so it must not run before the ordered chain above.
+test('malformed entries (null / non-object / non-alibaba host) are skipped, batch survives', () => {
+  const r = captureItems([
+    null,
+    'not-an-object',
+    { url: 'https://evil.example/product-detail/x_1.html', title: 'Phish' },
+    { url: 'https://alibaba.com.evil.com/product-detail/x_2.html', title: 'Phish2' },
+    { url: 'https://www.alibaba.com/product-detail/Good_777.html', title: 'Good Item', price_raw: '¥5' },
+  ], 'SEARCH');
+  assert.deepStrictEqual(r, { created: 1, updated: 0, total: 1 });
+  assert.ok(listItems('NEW').some(i => i.alibaba_id === '777'));
+  assert.ok(!listItems().some(i => i.title === 'Phish' || i.title === 'Phish2'));
+});
+
+test('long non-title fields are capped, not rejected', () => {
+  captureItems([{
+    url: 'https://www.alibaba.com/product-detail/Long_888.html',
+    title: 'Capped Item',
+    seller_name: 'S'.repeat(500),
+    price_raw: '¥7',
+  }], 'SEARCH');
+  const item = listItems('NEW').find(i => i.alibaba_id === '888');
+  assert.strictEqual(item.seller_name.length, 200);
+});
