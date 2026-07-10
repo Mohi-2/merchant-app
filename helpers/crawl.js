@@ -24,11 +24,15 @@ const captureItems = db.transaction((rawItems, pageType) => {
     const url = normalizeAlibabaUrl(raw.url);
     const title = String(raw.title || '').trim().slice(0, 300);
     if (!url || !title) continue;
-    const price = parsePriceRange(raw.price_raw);
+    const priceRaw = cap(raw.price_raw, 100);
+    // Only ¥/￥ prices are CNY. A €/$ price (e.g. when the browser's deliver-to
+    // isn't set to China) is kept verbatim in price_raw but not parsed into the
+    // CNY columns, so landed-cost math is never fed a mislabeled currency.
+    const price = /[¥￥]/.test(priceRaw || '') ? parsePriceRange(priceRaw) : null;
     const fields = {
       title,
       image_url: cap(raw.image_url, 1000),
-      price_raw: cap(raw.price_raw, 100),
+      price_raw: priceRaw,
       price_min_cny: price ? price.min : null,
       price_max_cny: price ? price.max : null,
       moq: cap(raw.moq, 200),

@@ -116,3 +116,16 @@ test('long non-title fields are capped, not rejected', () => {
   const item = listItems('NEW').find(i => i.alibaba_id === '888');
   assert.strictEqual(item.seller_name.length, 200);
 });
+
+test('non-yuan price kept as raw but not parsed into CNY columns', () => {
+  captureItems([{
+    url: 'https://www.alibaba.com/product-detail/Euro_999.html',
+    title: 'Euro Priced Item',
+    price_raw: '€1.64-1.77',
+  }], 'SEARCH');
+  const item = listItems('NEW').find(i => i.alibaba_id === '999');
+  assert.strictEqual(item.price_raw, '€1.64-1.77');
+  assert.strictEqual(item.price_min_cny, null);
+  assert.strictEqual(item.price_max_cny, null);
+  assert.strictEqual(listPrices(item.id).length, 0); // no CNY history row for a non-yuan price
+});
