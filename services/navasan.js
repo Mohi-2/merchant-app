@@ -16,12 +16,15 @@ async function fetchLatestRates() {
   }
   const json = await res.json();
 
-  // ---- PARSING BOUNDARY ----
-  // navasan.tech's exact field names are unverified (no live token available yet).
-  // This is the only place to adjust once a real response sample is seen.
-  const cny = json.usd_cny?.value ?? json.cny_sell?.value ?? json.cny?.value;
-  const usd = json.usd_sell?.value ?? json.usd?.value;
-  if (!cny || !usd) {
+  // navasan.tech /latest returns a flat map of ~300 codes, each { value, change,
+  // timestamp, date }. `value` is a string in TOMAN (not rial). Verified against a
+  // live response 2026-07: `usd` and `cny` are the free-market sell rates we want
+  // (usd/cny ≈ 6.8, matching the real USD/CNY cross-rate). The DB columns are named
+  // *_to_irr for historical reasons but the whole app treats them as Toman (the UI
+  // labels them «تومان») — so we store these Toman values directly.
+  const cny = json.cny?.value;
+  const usd = json.usd?.value;
+  if (cny == null || usd == null || !Number(cny) || !Number(usd)) {
     const err = new Error('پاسخ navasan.tech قابل تفسیر نبود — ساختار پاسخ را بررسی کنید');
     err.code = 'PARSE_ERROR';
     throw err;
