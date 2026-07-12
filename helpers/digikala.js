@@ -92,6 +92,77 @@ function listCompetitorPrices(id) {
   return db.prepare('SELECT * FROM digikala_competitor_price_history WHERE item_id = ? ORDER BY id DESC').all(id);
 }
 
+// ---- Own listings ----
+const ownById = db.prepare('SELECT * FROM digikala_own_items WHERE id = ?');
+const ownByDkp = db.prepare('SELECT * FROM digikala_own_items WHERE digikala_id = ?');
+const ownInsert = db.prepare(`
+  INSERT INTO digikala_own_items (digikala_id, title, price, stock, sales_count)
+  VALUES (@digikala_id, @title, @price, @stock, @sales_count)
+`);
+const ownUpdate = db.prepare(`
+  UPDATE digikala_own_items
+  SET title = @title, price = @price, stock = @stock, sales_count = @sales_count, updated_at = datetime('now')
+  WHERE id = @id
+`);
+const ownLatestPrice = db.prepare('SELECT * FROM digikala_own_price_history WHERE item_id = ? ORDER BY id DESC LIMIT 1');
+const ownInsertPrice = db.prepare('INSERT INTO digikala_own_price_history (item_id, price, stock) VALUES (?, ?, ?)');
+
+// stock/sales are plain integers; parseTomanPrice strips non-digits and returns
+// null when there are none, which is exactly the behavior we want here too.
+const toInt = (v) => parseTomanPrice(v);
+
+// New history row when price OR stock changed (own listings keep last known price
+// on the item row even when a scrape misses it — unlike competitors' out_of_stock).
+function recordOwnPrice(itemId, price, stock) {
+  const last = ownLatestPrice.get(itemId);
+  if (!last || last.price !== price || last.stock !== stock) ownInsertPrice.run(itemId, price, stock);
+}
+
+const captureOwnItems = db.transaction((rawItems) => {
+  let created = 0, updated = 0;
+  for (const raw of rawItems) {
+    if (!raw || typeof raw !== 'object') continue;
+    const digikala_id = raw.digikala_id != null ? String(raw.digikala_id).trim() : '';
+    const title = String(raw.title || '').trim().slice(0, 300);
+    if (!digikala_id || !title) continue;
+    const price = parseTomanPrice(raw.price_raw);
+    const stock = toInt(raw.stock);
+    const sales_count = toInt(raw.sales_count);
+    const existing = ownByDkp.get(digikala_id);
+    if (existing) {
+      ownUpdate.run({
+        id: existing.id, title, sales_count,
+        price: price != null ? price : existing.price,
+        stock: stock != null ? stock : existing.stock,
+      });
+      recordOwnPrice(existing.id, price != null ? price : existing.price, stock != null ? stock : existing.stock);
+      updated++;
+    } else {
+      const info = ownInsert.run({ digikala_id, title, price, stock, sales_count });
+      recordOwnPrice(info.lastInsertRowid, price, stock);
+      created++;
+    }
+  }
+  return { created, updated, total: created + updated };
+});
+
+function linkOwnItem(id, productId) {
+  if (!ownById.get(id)) return false;
+  return db.prepare('UPDATE digikala_own_items SET product_id = ? WHERE id = ?').run(productId ?? null, id).changes > 0;
+}
+
+function listOwnItems() {
+  return db.prepare(`
+    SELECT oi.*, (SELECT COUNT(*) FROM digikala_own_price_history h WHERE h.item_id = oi.id) AS price_count
+    FROM digikala_own_items oi ORDER BY oi.updated_at DESC, oi.id DESC
+  `).all();
+}
+
+function listOwnPrices(id) {
+  return db.prepare('SELECT * FROM digikala_own_price_history WHERE item_id = ? ORDER BY id DESC').all(id);
+}
+
 module.exports = {
   captureCompetitor, refreshCompetitor, setCompetitorStatus, listCompetitors, listCompetitorPrices,
+  captureOwnItems, linkOwnItem, listOwnItems, listOwnPrices,
 };
