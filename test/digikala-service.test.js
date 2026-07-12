@@ -34,3 +34,13 @@ test('fetchProduct: non-200 throws UPSTREAM_ERROR', async () => {
 test('fetchProduct: missing data throws PARSE_ERROR', async () => {
   await assert.rejects(fetchProduct('2', fakeFetch({ nope: 1 })), e => e.code === 'PARSE_ERROR');
 });
+
+test('fetchProduct: network error throws UPSTREAM_ERROR', async () => {
+  const badFetch = async () => { throw new Error('net down'); };
+  await assert.rejects(fetchProduct('2', badFetch), e => e.code === 'UPSTREAM_ERROR');
+});
+
+test('fetchProduct: malformed 200 body throws PARSE_ERROR', async () => {
+  const badFetch = async () => ({ ok: true, status: 200, json: async () => { throw new Error('bad json'); } });
+  await assert.rejects(fetchProduct('2', badFetch), e => e.code === 'PARSE_ERROR');
+});

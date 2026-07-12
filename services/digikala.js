@@ -22,7 +22,14 @@ async function fetchProduct(dkpId, fetchImpl = fetch) {
     err.code = 'UPSTREAM_ERROR';
     throw err;
   }
-  const json = await res.json();
+  let json;
+  try {
+    json = await res.json();
+  } catch (e) {
+    const err = new Error('پاسخ دیجی‌کالا قابل تفسیر نبود');
+    err.code = 'PARSE_ERROR';
+    throw err;
+  }
   const product = json && json.data && json.data.product;
   if (!product) {
     const err = new Error('پاسخ دیجی‌کالا قابل تفسیر نبود');
