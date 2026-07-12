@@ -70,4 +70,13 @@ function buildBookmarklet(baseUrl, token) {
   return 'javascript:' + encodeURIComponent(buildCaptureScript(baseUrl, token));
 }
 
-module.exports = { buildBookmarklet, buildCaptureScript };
+// Digikala bookmarklet builders — STUBS. Real DOM capture logic lands in Task 7;
+// for now these just alert so the /bookmarklets route has something to resolve.
+function buildDigikalaCompetitorBookmarklet(baseUrl, token) {
+  return 'javascript:' + encodeURIComponent(`(function(){alert('calibrate in Task 7')})();`);
+}
+function buildDigikalaOwnBookmarklet(baseUrl, token) {
+  return 'javascript:' + encodeURIComponent(`(function(){alert('calibrate in Task 7')})();`);
+}
+
+module.exports = { buildBookmarklet, buildCaptureScript, buildDigikalaCompetitorBookmarklet, buildDigikalaOwnBookmarklet };
