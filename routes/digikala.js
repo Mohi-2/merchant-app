@@ -85,7 +85,12 @@ router.post('/own/capture', (req, res) => {
 
 router.patch('/own/:id/link', requireAuth, (req, res) => {
   const { product_id } = req.body || {};
-  if (!linkOwnItem(Number(req.params.id), product_id ? Number(product_id) : null)) {
+  let pid = null;
+  if (product_id != null && product_id !== '') {
+    pid = Number(product_id);
+    if (!Number.isFinite(pid)) return res.status(400).json({ error: 'شناسه محصول نامعتبر است' });
+  }
+  if (!linkOwnItem(Number(req.params.id), pid)) {
     return res.status(404).json({ error: 'آیتم یافت نشد' });
   }
   res.json({ ok: true });
