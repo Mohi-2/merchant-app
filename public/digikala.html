@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>دیجی‌کالا – مدیریت واردات چین</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/app.css">
+</head>
+<body>
+<div id="app-header"></div>
+<main>
+  <div class="card">
+    <h2>راه‌اندازی بوکمارک‌ها</h2>
+    <p style="font-size:13px;color:var(--muted);line-height:2;">
+      «محصولات من» را در صفحه لیست محصولات پنل فروشنده بزن (همه محصولات صفحه یکجا خوانده می‌شوند).
+      «رقیب» را روی صفحه عمومی محصول رقیب بزن تا ردیابی قیمتش شروع شود؛ بعد از آن با دکمه بروزرسانی، سرور خودکار قیمت را تازه می‌کند.
+    </p>
+    <p style="margin-top:10px;display:flex;gap:10px;flex-wrap:wrap;">
+      <a id="ownBookmarklet" class="btn primary" style="text-decoration:none;" href="#">📥 محصولات من (پنل فروشنده)</a>
+      <a id="competitorBookmarklet" class="btn primary" style="text-decoration:none;" href="#">📥 ردیابی رقیب</a>
+      <span class="hint" style="font-size:11.5px;color:var(--faint);">این دکمه‌ها را بکش به بوکمارک‌بار (کلیک نکن)</span>
+    </p>
+  </div>
+  <div class="card">
+    <div id="tabs" style="display:flex;gap:6px;margin-bottom:14px;">
+      <button class="btn tab-btn" data-tab="own">محصولات من</button>
+      <button class="btn tab-btn" data-tab="competitor">رقبا</button>
+    </div>
+    <div id="itemsWrap"><p class="empty">در حال بارگذاری…</p></div>
+  </div>
+</main>
+<div id="toast"></div>
+<script src="/js/api.js"></script>
+<script src="/js/header.js"></script>
+<script src="/js/digikala.js"></script>
+</body>
+</html>
