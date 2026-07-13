@@ -1,0 +1,15 @@
+services:
+  app:
+    build: .
+    ports:
+      - "3000:3000"
+    environment:
+      PORT: 3000
+      SESSION_SECRET: ${SESSION_SECRET}
+      NAVASAN_API_TOKEN: ${NAVASAN_API_TOKEN}
+    volumes:
+      - cim-data:/app/data
+    restart: unless-stopped
+
+volumes:
+  cim-data:
