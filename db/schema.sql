@@ -98,3 +98,46 @@ CREATE TABLE IF NOT EXISTS crawled_prices (
   captured_at     TEXT NOT NULL DEFAULT (datetime('now'))
 );
 CREATE INDEX IF NOT EXISTS idx_crawled_prices_item ON crawled_prices(crawled_item_id);
+
+CREATE TABLE IF NOT EXISTS digikala_own_items (
+  id            INTEGER PRIMARY KEY AUTOINCREMENT,
+  digikala_id   TEXT NOT NULL UNIQUE,
+  title         TEXT NOT NULL,
+  product_id    INTEGER REFERENCES products(id) ON DELETE SET NULL,
+  price         INTEGER,
+  stock         INTEGER,
+  sales_count   INTEGER,
+  captured_at   TEXT NOT NULL DEFAULT (datetime('now')),
+  updated_at    TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_dk_own_product ON digikala_own_items(product_id);
+
+CREATE TABLE IF NOT EXISTS digikala_own_price_history (
+  id          INTEGER PRIMARY KEY AUTOINCREMENT,
+  item_id     INTEGER NOT NULL REFERENCES digikala_own_items(id) ON DELETE CASCADE,
+  price       INTEGER,
+  stock       INTEGER,
+  recorded_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_dk_own_hist_item ON digikala_own_price_history(item_id);
+
+CREATE TABLE IF NOT EXISTS digikala_competitor_items (
+  id           INTEGER PRIMARY KEY AUTOINCREMENT,
+  url          TEXT NOT NULL UNIQUE,
+  digikala_id  TEXT,
+  title        TEXT NOT NULL,
+  seller_name  TEXT,
+  price        INTEGER,
+  status       TEXT NOT NULL DEFAULT 'ACTIVE' CHECK (status IN ('ACTIVE','IGNORED')),
+  captured_at  TEXT NOT NULL DEFAULT (datetime('now')),
+  updated_at   TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_dk_comp_status ON digikala_competitor_items(status);
+
+CREATE TABLE IF NOT EXISTS digikala_competitor_price_history (
+  id          INTEGER PRIMARY KEY AUTOINCREMENT,
+  item_id     INTEGER NOT NULL REFERENCES digikala_competitor_items(id) ON DELETE CASCADE,
+  price       INTEGER,
+  recorded_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_dk_comp_hist_item ON digikala_competitor_price_history(item_id);

@@ -70,4 +70,58 @@ function buildBookmarklet(baseUrl, token) {
   return 'javascript:' + encodeURIComponent(buildCaptureScript(baseUrl, token));
 }
 
-module.exports = { buildBookmarklet, buildCaptureScript };
+// Runs on a competitor's PUBLIC digikala product page. Extracts raw strings only;
+// server parses the Toman price and extracts the dkp id from the URL.
+function buildDigikalaCompetitorScript(baseUrl, token) {
+  return `(function(){
+var BASE=${JSON.stringify(baseUrl)},TOKEN=${JSON.stringify(token)};
+function txt(el){return el&&el.textContent?el.textContent.trim():''}
+function toast(msg,ok){var d=document.createElement('div');d.textContent=msg;d.style.cssText='position:fixed;top:16px;left:16px;z-index:2147483647;padding:12px 18px;border-radius:10px;font:600 14px/1.4 sans-serif;direction:rtl;color:#fff;background:'+(ok?'#16a34a':'#ef4444')+';box-shadow:0 6px 20px rgba(0,0,0,.3)';document.body.appendChild(d);setTimeout(function(){d.remove()},5000)}
+var h1=document.querySelector('h1');
+var pel=document.querySelector('[data-testid*="price"],[class*="price"]');
+var sel=document.querySelector('[data-testid*="seller"],a[href*="/seller/"],[class*="seller"]');
+var item={url:location.href,title:txt(h1)||document.title,price_raw:txt(pel),seller_name:txt(sel)};
+if(!item.title){toast('\\u0639\\u0646\\u0648\\u0627\\u0646 \\u0645\\u062d\\u0635\\u0648\\u0644 \\u067e\\u06cc\\u062f\\u0627 \\u0646\\u0634\\u062f',false);return}
+fetch(BASE+'/api/digikala/competitor/capture',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token:TOKEN,item:item})})
+.then(function(r){return r.json().catch(function(){return{}}).then(function(d){if(!r.ok)throw new Error(d.error||('HTTP '+r.status));return d})})
+.then(function(d){toast(d.created?'\\u0631\\u0642\\u06cc\\u0628 \\u062c\\u062f\\u06cc\\u062f \\u062b\\u0628\\u062a \\u0634\\u062f':'\\u0642\\u06cc\\u0645\\u062a \\u0628\\u0631\\u0648\\u0632 \\u0634\\u062f',true)})
+.catch(function(e){toast('\\u062e\\u0637\\u0627: '+e.message,false)});
+})();`;
+}
+
+// Runs on the seller panel product-list page. Reads every row on the current page.
+// SELECTORS ARE BEST-GUESS — calibrate against the live seller.digikala.com panel.
+function buildDigikalaOwnScript(baseUrl, token) {
+  return `(function(){
+var BASE=${JSON.stringify(baseUrl)},TOKEN=${JSON.stringify(token)};
+function txt(el){return el&&el.textContent?el.textContent.trim():''}
+function toast(msg,ok){var d=document.createElement('div');d.textContent=msg;d.style.cssText='position:fixed;top:16px;left:16px;z-index:2147483647;padding:12px 18px;border-radius:10px;font:600 14px/1.4 sans-serif;direction:rtl;color:#fff;background:'+(ok?'#16a34a':'#ef4444')+';box-shadow:0 6px 20px rgba(0,0,0,.3)';document.body.appendChild(d);setTimeout(function(){d.remove()},5000)}
+var items=[];
+var rows=document.querySelectorAll('tbody tr,[class*="product-row"],[data-testid*="product-row"]');
+for(var i=0;i<rows.length;i++){
+  var row=rows[i];
+  var link=row.querySelector('a[href*="dkp-"]');
+  var dkp='';if(link){var m=(link.getAttribute('href')||'').match(/dkp-(\\d+)/);if(m)dkp=m[1]}
+  if(!dkp)continue;
+  var titleEl=row.querySelector('[class*="title"],a[href*="dkp-"]');
+  var priceEl=row.querySelector('[class*="price"],[data-testid*="price"]');
+  var stockEl=row.querySelector('[class*="stock"],[data-testid*="stock"]');
+  var salesEl=row.querySelector('[class*="sales"],[data-testid*="sales"]');
+  items.push({digikala_id:dkp,title:txt(titleEl),price_raw:txt(priceEl),stock:txt(stockEl),sales_count:txt(salesEl)});
+}
+if(!items.length){toast('\\u0645\\u062d\\u0635\\u0648\\u0644\\u06cc \\u062f\\u0631 \\u0627\\u06cc\\u0646 \\u0635\\u0641\\u062d\\u0647 \\u067e\\u06cc\\u062f\\u0627 \\u0646\\u0634\\u062f',false);return}
+fetch(BASE+'/api/digikala/own/capture',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token:TOKEN,items:items})})
+.then(function(r){return r.json().catch(function(){return{}}).then(function(d){if(!r.ok)throw new Error(d.error||('HTTP '+r.status));return d})})
+.then(function(d){toast(d.total+' \\u0645\\u062d\\u0635\\u0648\\u0644 \\u062b\\u0628\\u062a \\u0634\\u062f ('+d.created+' \\u062c\\u062f\\u06cc\\u062f)',true)})
+.catch(function(e){toast('\\u062e\\u0637\\u0627: '+e.message,false)});
+})();`;
+}
+
+function buildDigikalaCompetitorBookmarklet(baseUrl, token) {
+  return 'javascript:' + encodeURIComponent(buildDigikalaCompetitorScript(baseUrl, token));
+}
+function buildDigikalaOwnBookmarklet(baseUrl, token) {
+  return 'javascript:' + encodeURIComponent(buildDigikalaOwnScript(baseUrl, token));
+}
+
+module.exports = { buildBookmarklet, buildCaptureScript, buildDigikalaCompetitorBookmarklet, buildDigikalaOwnBookmarklet };

@@ -46,7 +46,16 @@ Server-side scraping of alibaba.com doesn't work (search pages return an empty J
 - `routes/crawl.js`'s `POST /api/crawl/capture` is reachable cross-origin from `*.alibaba.com` (manual CORS handling, not the `cors` package) and authenticated by a random capture token (`helpers/settings.js`'s `getOrCreateCrawlToken()`, auto-created and stored in the `settings` table) rather than the session cookie, since cookies aren't sent cross-site.
 - `helpers/crawl.js`'s `captureItems()` upserts by normalized URL (`helpers/parse.js`'s `normalizeAlibabaUrl`, which also rejects non-alibaba.com hosts), only parses `¥`/`￥`-prefixed prices into the CNY columns (a €/$ price — e.g. when the browser's deliver-to isn't China — is kept as raw text but never mislabeled as CNY), and appends a `crawled_prices` history row only when the parsed price actually changed.
 - Reviewed at `public/crawled.html` (NEW/ADDED/IGNORED tabs); "add to products" creates a `products` row with `alibaba_link` set to the captured URL.
-- Deferred: an automated Playwright crawler (Phase 3) would reuse these same tables/upsert helper; a Digikala seller-product crawler is a separate, later phase.
+- Deferred: an automated Playwright crawler (Phase 3) would reuse these same tables/upsert helper. The Digikala crawler (below) is a separate subsystem that now exists.
+
+### Digikala crawler (Phase 3)
+
+Two independent subsystems for the *sell* side, kept fully separate (no FKs between them), under route prefix `/api/digikala` (`routes/digikala.js`), reusing the same capture token as the Alibaba crawler (`getOrCreateCrawlToken()`):
+
+- **Own listings** (`digikala_own_items` + `digikala_own_price_history`) — a seller-panel bookmarklet (`buildDigikalaOwnBookmarklet`) reads every product row on the current `seller.digikala.com` list page in one click and posts them as a batch to `POST /api/digikala/own/capture`. `helpers/digikala.js`'s `captureOwnItems()` upserts by `digikala_id`, keeping the last known price/stock when a scrape omits a value. Own items can be linked to a system `products` row via `PATCH /api/digikala/own/:id/link`. **The seller-panel selectors are best-guess (the panel is auth-gated and could not be inspected during development) — they need live calibration, like the Alibaba live step.**
+- **Competitors** (`digikala_competitor_items` + `digikala_competitor_price_history`) — a bookmarklet (`buildDigikalaCompetitorBookmarklet`) on a competitor's *public* product page posts one item to `POST /api/digikala/competitor/capture` to *start* tracking. Thereafter, price refresh is **server-side**: `POST /api/digikala/competitor/:id/refresh` calls Digikala's public JSON API (`services/digikala.js`'s `fetchProduct` → `https://api.digikala.com/v2/product/<dkp>/`), so no browser is needed to re-check a price (unlike Alibaba). Refresh is per-item and manual (a button on each row).
+- **Currency:** the public API's `selling_price` is in **Rial**; `fetchProduct` divides by 10 to store **Toman** (everything else in the app is Toman). Out-of-stock (`status != 'marketable'`) → competitor `price` is set NULL and flagged «ناموجود», never deleted.
+- Both subsystems append a price-history row only when the value actually changed (mirrors `crawled_prices`). Reviewed at `public/digikala.html` (two independent tabs: «محصولات من» / «رقبا»); prices in `helpers/parse.js`'s `parseTomanPrice` normalize Persian/Arabic digits. `extractDkpId`/`normalizeDigikalaUrl` reject non-digikala hosts.
 
 ### Exchange rate integration
 
