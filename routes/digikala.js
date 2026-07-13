@@ -3,6 +3,7 @@ const express = require('express');
 const router = express.Router();
 const { requireAuth } = require('../helpers/middleware');
 const { getOrCreateCrawlToken } = require('../helpers/settings');
+const { getProduct } = require('../helpers/products');
 const { buildDigikalaCompetitorBookmarklet, buildDigikalaOwnBookmarklet } = require('../services/bookmarklet');
 const {
   captureCompetitor, refreshCompetitor, setCompetitorStatus, listCompetitors, listCompetitorPrices,
@@ -89,6 +90,7 @@ router.patch('/own/:id/link', requireAuth, (req, res) => {
   if (product_id != null && product_id !== '') {
     pid = Number(product_id);
     if (!Number.isFinite(pid)) return res.status(400).json({ error: 'شناسه محصول نامعتبر است' });
+    if (!getProduct(pid)) return res.status(400).json({ error: 'محصول یافت نشد' });
   }
   if (!linkOwnItem(Number(req.params.id), pid)) {
     return res.status(404).json({ error: 'آیتم یافت نشد' });

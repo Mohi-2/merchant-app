@@ -131,9 +131,10 @@ const captureOwnItems = db.transaction((rawItems) => {
     const existing = ownByDkp.get(digikala_id);
     if (existing) {
       ownUpdate.run({
-        id: existing.id, title, sales_count,
+        id: existing.id, title,
         price: price != null ? price : existing.price,
         stock: stock != null ? stock : existing.stock,
+        sales_count: sales_count != null ? sales_count : existing.sales_count,
       });
       recordOwnPrice(existing.id, price != null ? price : existing.price, stock != null ? stock : existing.stock);
       updated++;

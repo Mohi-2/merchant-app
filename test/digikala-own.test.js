@@ -32,6 +32,12 @@ test('captureOwnItems: changed price appends history row', () => {
   assert.strictEqual(listOwnPrices(a.id).length, 2);
 });
 
+test('captureOwnItems: recapture omitting sales_count keeps existing value', () => {
+  captureOwnItems([{ digikala_id: '555', title: 'محصول من', price_raw: '۵۰۰,۰۰۰' }]);
+  const a = listOwnItems().find(x => x.digikala_id === '555');
+  assert.strictEqual(a.sales_count, 30);
+});
+
 test('captureOwnItems: malformed entries skipped, batch survives', () => {
   const r = captureOwnItems([null, { title: 'no id' }, { digikala_id: '777', title: 'خوب', price_raw: '۹۰,۰۰۰' }]);
   assert.deepStrictEqual(r, { created: 1, updated: 0, total: 1 });
