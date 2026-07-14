@@ -52,14 +52,18 @@ function linkCell(it) {
 }
 
 async function onLink(e) {
-  const row = e.target.closest('tr');
-  const productId = e.target.value;
+  const select = e.target;
+  const row = select.closest('tr');
+  const productId = select.value;
   if (!productId) return;
   try {
     await api.patch(`/api/digikala/own/${row.dataset.id}/link`, { product_id: productId });
     showToast('به محصول متصل شد', 'success');
     loadItems();
-  } catch (err) { showToast(err.message, 'error'); }
+  } catch (err) {
+    showToast(err.message, 'error');
+    select.value = '';
+  }
 }
 
 function renderCompetitor(wrap, items) {
@@ -76,7 +80,7 @@ function renderCompetitor(wrap, items) {
             <td><button class="btn history-btn" data-kind="competitor" style="padding:4px 9px;">${fmtNumber(it.price_count)} ↓</button></td>
             <td style="white-space:nowrap;">
               <button class="btn refresh-btn" style="padding:5px 10px;">🔄 بروزرسانی</button>
-              <button class="btn status-btn" style="padding:5px 10px;">${it.status === 'IGNORED' ? 'بازگردانی' : 'نادیده'}</button>
+              <button class="btn status-btn" data-status="${it.status}" style="padding:5px 10px;">${it.status === 'IGNORED' ? 'بازگردانی' : 'نادیده'}</button>
             </td>
           </tr>`).join('')}
       </tbody>
@@ -101,7 +105,7 @@ async function onRefresh(e) {
 
 async function onToggleStatus(e) {
   const row = e.target.closest('tr');
-  const next = e.target.textContent.trim() === 'نادیده' ? 'IGNORED' : 'ACTIVE';
+  const next = e.target.dataset.status === 'IGNORED' ? 'ACTIVE' : 'IGNORED';
   try {
     await api.patch(`/api/digikala/competitor/${row.dataset.id}/status`, { status: next });
     loadItems();

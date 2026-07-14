@@ -2,6 +2,7 @@
 process.env.CIM_DB_PATH = ':memory:';
 const { test } = require('node:test');
 const assert = require('node:assert');
+const db = require('../helpers/db');
 const {
   captureCompetitor, refreshCompetitor, setCompetitorStatus,
   listCompetitors, listCompetitorPrices,
@@ -63,10 +64,25 @@ test('refreshCompetitor: unknown id throws 404', async () => {
   await assert.rejects(refreshCompetitor(999999, async () => ({})), e => e.status === 404);
 });
 
+test('refreshCompetitor: backfills a null digikala_id from the stored url', async () => {
+  const info = db.prepare(
+    'INSERT INTO digikala_competitor_items (url, digikala_id, title, price) VALUES (?, NULL, ?, ?)'
+  ).run('https://www.digikala.com/product/dkp-42/x/', 'بدون شناسه', 1000);
+  const stub = async () => ({ title: 'بدون شناسه', status: 'marketable', priceToman: 2000, sellerName: 'س' });
+  const item = await refreshCompetitor(info.lastInsertRowid, stub);
+  assert.strictEqual(item.digikala_id, '42');
+});
+
 test('setCompetitorStatus: toggles IGNORED/ACTIVE, rejects unknown id', () => {
   const id = listCompetitors('ACTIVE')[0].id;
   assert.strictEqual(setCompetitorStatus(id, 'IGNORED'), true);
   assert.strictEqual(listCompetitors('IGNORED').length, 1);
   assert.strictEqual(setCompetitorStatus(id, 'ACTIVE'), true);
   assert.strictEqual(setCompetitorStatus(999999, 'IGNORED'), false);
+});
+
+test('setCompetitorStatus: rejects an invalid status string, leaves row unchanged', () => {
+  const id = listCompetitors('ACTIVE')[0].id;
+  assert.strictEqual(setCompetitorStatus(id, 'BOGUS'), false);
+  assert.strictEqual(listCompetitors('ACTIVE').some(r => r.id === id), true);
 });

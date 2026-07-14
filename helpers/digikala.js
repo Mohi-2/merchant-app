@@ -14,7 +14,7 @@ const compInsert = db.prepare(`
 `);
 const compUpdate = db.prepare(`
   UPDATE digikala_competitor_items
-  SET title = @title, seller_name = @seller_name, price = @price, updated_at = datetime('now')
+  SET title = @title, seller_name = @seller_name, price = @price, digikala_id = @digikala_id, updated_at = datetime('now')
   WHERE id = @id
 `);
 const compLatestPrice = db.prepare('SELECT * FROM digikala_competitor_price_history WHERE item_id = ? ORDER BY id DESC LIMIT 1');
@@ -27,6 +27,12 @@ function recordCompetitorPrice(itemId, price) {
   if (!last || last.price !== price) compInsertPrice.run(itemId, price);
 }
 
+// Backfills a null digikala_id from the stored url (e.g. an item captured before
+// extractDkpId could resolve it) — cheap since it's just a regex match, not a fetch.
+function resolveDkpId(item) {
+  return item.digikala_id || extractDkpId(item.url);
+}
+
 const captureCompetitor = db.transaction((raw) => {
   if (!raw || typeof raw !== 'object') return null;
   const url = normalizeDigikalaUrl(raw.url);
@@ -36,7 +42,7 @@ const captureCompetitor = db.transaction((raw) => {
   const fields = { title, seller_name: cap(raw.seller_name, 200), price };
   const existing = compByUrl.get(url);
   if (existing) {
-    compUpdate.run({ ...fields, price: price != null ? price : existing.price, id: existing.id });
+    compUpdate.run({ ...fields, price: price != null ? price : existing.price, digikala_id: resolveDkpId(existing), id: existing.id });
     recordCompetitorPrice(existing.id, price);
     return { id: existing.id, created: false };
   }
@@ -52,7 +58,7 @@ async function refreshCompetitor(id, fetchProductImpl = fetchProduct) {
     err.status = 404;
     throw err;
   }
-  const dkp = item.digikala_id || extractDkpId(item.url);
+  const dkp = resolveDkpId(item);
   if (!dkp) {
     const err = new Error('شناسه محصول دیجی‌کالا یافت نشد');
     err.status = 400;
@@ -60,15 +66,17 @@ async function refreshCompetitor(id, fetchProductImpl = fetchProduct) {
   }
   const data = await fetchProductImpl(dkp);
   const apply = db.transaction(() => {
+    // priceToman is null on out_of_stock — write it straight through (no
+    // fallback to the old price) so a single UPDATE reflects current
+    // unavailability instead of a stale price followed by a second write.
     compUpdate.run({
       id,
       title: item.title,
       seller_name: cap(data.sellerName, 200),
-      price: data.priceToman != null ? data.priceToman : item.price,
+      price: data.priceToman,
+      digikala_id: dkp,
     });
     recordCompetitorPrice(id, data.priceToman);
-    // out_of_stock: keep the last known price on the row, but reflect unavailability
-    if (data.priceToman == null) db.prepare("UPDATE digikala_competitor_items SET price = NULL, updated_at = datetime('now') WHERE id = ?").run(id);
   });
   apply();
   return compById.get(id);

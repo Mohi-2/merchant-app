@@ -81,6 +81,9 @@ var h1=document.querySelector('h1');
 var pel=document.querySelector('[data-testid*="price"],[class*="price"]');
 var sel=document.querySelector('[data-testid*="seller"],a[href*="/seller/"],[class*="seller"]');
 var item={url:location.href,title:txt(h1)||document.title,price_raw:txt(pel),seller_name:txt(sel)};
+// Still checked even after the document.title fallback above: an untitled/error
+// page can leave document.title empty too, and this avoids a doomed round-trip
+// to the server (which requires a title) in that case.
 if(!item.title){toast('\\u0639\\u0646\\u0648\\u0627\\u0646 \\u0645\\u062d\\u0635\\u0648\\u0644 \\u067e\\u06cc\\u062f\\u0627 \\u0646\\u0634\\u062f',false);return}
 fetch(BASE+'/api/digikala/competitor/capture',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token:TOKEN,item:item})})
 .then(function(r){return r.json().catch(function(){return{}}).then(function(d){if(!r.ok)throw new Error(d.error||('HTTP '+r.status));return d})})
