@@ -73,4 +73,12 @@ SESSION_SECRET=<random string>       # falls back to an insecure default with a 
 NAVASAN_API_TOKEN=                   # from navasan.tech; exchange-rate refresh 400s with a clear message if unset
 ```
 
-`.env` is loaded via `dotenv` in `server.js` (this app has no Liara/Vercel deployment yet — local/dev only).
+`.env` is loaded via `dotenv` in `server.js` for local dev.
+
+## Deployment
+
+**Liara (Docker):** `liara deploy -a merchant-app` uses `Dockerfile` + `liara.json`. Multi-stage build (`node:20-bookworm-slim`) compiles `better-sqlite3`'s native addon against glibc in a throwaway builder stage; the runtime stage runs as a non-root `appuser`. `data/` is a Liara disk (`data`, 1GB) mounted at `/app/data` (declared in `liara.json`'s `disks`), so the SQLite file survives redeploys. Env vars (`PORT`, `SESSION_SECRET`, `NAVASAN_API_TOKEN`) are set via `liara env:set -a merchant-app`, not committed. Live at `https://merchant-app.liara.run`.
+
+**Docker (any host):** `docker compose up -d --build` with a `.env` providing `SESSION_SECRET`/`NAVASAN_API_TOKEN` — `docker-compose.yml` mounts a named volume at `/app/data` for the same persistence guarantee.
+
+**Important:** `.dockerignore` must never list `Dockerfile` itself — some BuildKit-based remote builders (Liara included) exclude it from the build context in that case, failing with "the Dockerfile cannot be empty".
